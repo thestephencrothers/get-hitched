@@ -31,19 +31,6 @@ function ProgressBar({ label, value, total, color, showPct }) {
   );
 }
 
-function Card({ title, icon, children, noPad }) {
-  return (
-    <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: noPad ? 0 : '1.25rem', marginBottom: '1rem', overflow: 'hidden' }}>
-      {title && (
-        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: noPad ? 0 : '1rem', display: 'flex', alignItems: 'center', gap: 8, padding: noPad ? '1.25rem 1.25rem 1rem' : 0 }}>
-          {icon} {title}
-        </div>
-      )}
-      {children}
-    </div>
-  );
-}
-
 function PersonSavings({ name, actual, target, projected, color }) {
   const onTrack = actual >= projected;
   return (
@@ -180,10 +167,8 @@ function parseCosts(rows) {
 
   const preHeaderIdx = rows.findIndex((r, i) => i > 6 && (r[1] || '').trim() === 'Cost Type');
   const preItems = preHeaderIdx > 0 ? parseItems(preHeaderIdx + 1) : [];
-
   const recHeaderIdx = rows.findIndex((r, i) => i > preHeaderIdx + 1 && (r[1] || '').trim() === 'Cost Type');
   const recItems = recHeaderIdx > 0 ? parseItems(recHeaderIdx + 1) : [];
-
   const postHeaderIdx = rows.findIndex((r, i) => i > recHeaderIdx + 1 && (r[1] || '').trim() === 'Cost Type');
   const postItems = postHeaderIdx > 0 ? parseItems(postHeaderIdx + 1) : [];
 
@@ -213,6 +198,8 @@ export default function Dashboard() {
   const lauraProjected = Math.round((laura.target / 20) * monthsElapsed);
 
   const allDeposits = [...preItems, ...recItems, ...postItems].filter(d => d.deposit > 0);
+  const stephenPaid = allDeposits.filter(d => d.paidBy === 'Stephen').reduce((s, d) => s + d.deposit, 0);
+  const lauraPaid = allDeposits.filter(d => d.paidBy === 'Laura').reduce((s, d) => s + d.deposit, 0);
 
   return (
     <div>
@@ -224,41 +211,65 @@ export default function Dashboard() {
         <MetricCard label="Still to save" value={fmt(stillToSave)} color="#BA7517" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-        <div>
-          <Card title="Spend by category" icon="🧾">
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1.25rem' }}>
+            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>🧾 Spend by category</div>
             <ProgressBar label="Pre-reception" value={preReception} total={total} color="#378ADD" showPct />
             <ProgressBar label="Reception" value={reception} total={total} color="#1D9E75" showPct />
             <ProgressBar label="Post-reception" value={postReception} total={total} color="#D85A30" showPct />
-          </Card>
+          </div>
 
-          <Card title="Deposits paid" icon="💳">
-            {allDeposits.map((d, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '0.5px solid rgba(0,0,0,0.07)', fontSize: 13 }}>
-                <div>
-                  <div>{d.name}</div>
-                  {d.detail && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{d.detail}</div>}
+          <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ fontSize: 14, fontWeight: 500, padding: '1.25rem 1.25rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>💳 Deposits paid</div>
+            <div style={{ overflowY: 'auto', maxHeight: 260, padding: '0 1.25rem', borderBottom: '0.5px solid rgba(0,0,0,0.07)' }}>
+              {allDeposits.map((d, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '0.5px solid rgba(0,0,0,0.07)', fontSize: 13 }}>
+                  <div>
+                    <div>{d.name}</div>
+                    {d.detail && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{d.detail}</div>}
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+                    <div style={{ fontWeight: 500, color: '#0F6E56' }}>{fmt(d.deposit)}</div>
+                    {d.paidBy && <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{d.paidBy}</div>}
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
-                  <div style={{ fontWeight: 500, color: '#0F6E56' }}>{fmt(d.deposit)}</div>
-                  {d.paidBy && <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{d.paidBy}</div>}
-                </div>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.1)', fontSize: 13, fontWeight: 500 }}>
-              <span>Total deposits paid</span>
-              <span style={{ color: '#0F6E56' }}>{fmt(paid)}</span>
+              ))}
             </div>
-          </Card>
+            <div style={{ padding: '12px 1.25rem', fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ color: '#666' }}>Stephen paid</span>
+                <span style={{ fontWeight: 500, color: '#0F6E56' }}>{fmt(stephenPaid)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ color: '#666' }}>Laura paid</span>
+                <span style={{ fontWeight: 500, color: lauraPaid > 0 ? '#0F6E56' : '#aaa' }}>{fmt(lauraPaid)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 6, borderTop: '0.5px solid rgba(0,0,0,0.07)', fontWeight: 500 }}>
+                <span>Total</span>
+                <span style={{ color: '#0F6E56' }}>{fmt(paid)}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card title="Savings breakdown" icon="🐷">
+        <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1.25rem', height: '100%', boxSizing: 'border-box' }}>
+          <div style={{ fontSize: 14, fontWeight: 500, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>🐷 Savings breakdown</div>
           <PersonSavings name="Stephen" actual={stephen.actual} target={stephen.target} projected={stephenProjected} color="#378ADD" />
           <PersonSavings name="Laura" actual={laura.actual} target={laura.target} projected={lauraProjected} color="#1D9E75" />
           <div style={{ paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.07)', fontSize: 13 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
               <span style={{ color: '#666' }}>Total saved</span>
               <span style={{ fontWeight: 500, color: '#0F6E56' }}>{fmt(totalSaved)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+              <span style={{ color: '#666' }}>Deposits paid</span>
+              <span style={{ fontWeight: 500, color: '#BA7517' }}>{fmt(paid)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+              <span style={{ color: '#666' }}>Net available</span>
+              <span style={{ fontWeight: 500, color: '#0F6E56' }}>{fmt(totalSaved - paid)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
               <span style={{ color: '#666' }}>Still to save</span>
@@ -269,10 +280,12 @@ export default function Dashboard() {
               <span style={{ fontWeight: 500 }}>{fmt(goalTotal)}</span>
             </div>
           </div>
-        </Card>
+        </div>
+
       </div>
 
-      <Card title="Monthly savings — planned vs actual" icon="📊">
+      <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>📊 Monthly savings — planned vs actual</div>
         <div style={{ display: 'flex', gap: 16, marginBottom: 10, fontSize: 12, color: '#888', flexWrap: 'wrap' }}>
           {[
             { color: '#378ADD', label: 'Stephen planned' },
@@ -297,13 +310,14 @@ export default function Dashboard() {
             <Bar dataKey="lActual" fill="#9FE1CB" radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </Card>
+      </div>
 
-      <Card title="Full cost breakdown" icon="💰" noPad>
+      <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
+        <div style={{ fontSize: 14, fontWeight: 500, padding: '1.25rem 1.25rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>💰 Full cost breakdown</div>
         <CostsTable title={`Pre-reception — ${fmt(preReception)}`} items={preItems} />
         <CostsTable title={`Reception — ${fmt(reception)}`} items={recItems} />
         <CostsTable title={`Post-reception — ${fmt(postReception)}`} items={postItems} />
-      </Card>
+      </div>
     </div>
   );
 }
