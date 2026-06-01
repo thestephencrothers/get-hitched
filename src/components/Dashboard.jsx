@@ -82,7 +82,7 @@ function parseCosts(rows) {
 
   const deposits = [];
   rows.slice(9).forEach(row => {
-    const name = row[1];
+    const name = row[1]; 
     const deposit = parseNum(row[7]);
     if (name && deposit && name !== 'Cost Type') {
       deposits.push({ name, amount: deposit });
