@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const GOLD = '#c9a84c';
-const CREAM = '#f9f6f0';
 
 export default function NavBar() {
   const navigate = useNavigate();

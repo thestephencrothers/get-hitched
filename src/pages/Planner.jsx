@@ -12,10 +12,7 @@ export default function Planner() {
     if (location.state?.tab) setTab(location.state.tab);
   }, [location.state]);
 
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'guests', label: 'Guest List' },
-  ];
+ 
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f4f0', fontFamily: "'Cormorant Garamond', serif" }}>
